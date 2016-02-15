@@ -356,7 +356,10 @@ handles.events(:,1) = getcondtrial(handles.Analyzer);
 handles.frameT = 64.4999; handles.lineT = 0.1260; % Period of frame, line acquisition in msec -- VALUES DEPEND ON HARDWARE
 ind = find(handles.info.event_id == 2); % indices of event 1 (stimulus onset)
 ind = ind(1:2:end);
-% ind = ind(3:4:end); % for trial average experiments
+
+% correct for aborted experiments
+ind = ind(1:length(handles.events));
+
 handles.events(:,2) = handles.frameT*handles.info.frame(ind) + handles.lineT*handles.info.line(ind);
 %%% Get handles.times, I know the time of each signal to position of frame
 % acquisition in the signals array (given by row index), but the signal of
