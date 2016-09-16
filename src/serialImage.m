@@ -43,6 +43,7 @@ function serialImage(fileList)
                 save([fileList{ii}{jj} '.image'],'avgImage','channel','numFramesToSkip');
                 
                 imwrite(avgImage,[fileList{ii}{jj} '.mergeImage.png'])
+                imwrite(avgImage,[fileList{ii}{jj} '.groupImage.tiff'],'WriteMode','append')
             else
                 zGreen = readskip(fname,numFramesToSkip,1);
                 
@@ -52,6 +53,8 @@ function serialImage(fileList)
                 avgImage = avgImage/max(avgImage(:)); 
                 avgImage = repmat(avgImage,[1 1 3]);
                 save([fileList{ii}{jj} '.image'],'avgImage','channel','numFramesToSkip');
+                imwrite(avgImage,[fileList{ii}{jj} '.image.png'])
+                imwrite(avgImage,[fileList{ii}{jj} '.groupImage.tiff'],'WriteMode','append')
             end
 			iGroup{jj} = avgImage;
         end
