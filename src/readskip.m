@@ -1,25 +1,30 @@
-function z = readskip(fname,startFrame,numFramesToSkip,channel,h)
-global info;
+function z = readskip(fname,startFrame,nFramesToSkip,channel,h)
+    global info;
 
-numFramesToRead = floor(info.max_idx/numFramesToSkip);
+    nFramesToRead = floor(info.max_idx/nFramesToSkip);
 
-% if no channel is given, use channel 1
-if nargin < 4; channel = 1; end
+    % if no channel is given, use channel 1
+    if nargin < 4; channel = 1; end
 
-z = sbxread(fname,startFrame,1);
-T = [];
+    % z = sbxread(fname,startFrame,1);
+    z = zeros(info.sz);
 
-z = zeros([size(z,2) size(z,3) numFramesToRead]);
-
-for j = 1:numFramesToRead
-    if exist('h','var') && ~isempty(h)
-        waitbar(j/numFramesToRead,h);
+    for j = 1:nFramesToRead
+        if exist('h','var') && ~isempty(h)
+            waitbar(j/nFramesToRead,h);
+        end
+        origFrame = sbxread(fname,j*nFramesToSkip,1);
+        origFrame = squeeze(origFrame(channel,:,:));
+        if ~isempty(info.aligned)
+            alignedFrame = circshift(origFrame,info.aligned.T(j*nFramesToSkip,:)); 
+            z = z + double(alignedFrame);
+        else
+            z = z + double(origFrame);
+        end
+%         if isfield(info,'alignedNR') && ~isempty(info.alignedNR)
+%             warpedFrame = imwarp(origFrame,squeeze(info.alignedNR.T(j*nFramesToSkip,:,:,:))); 
+%         end
+        
+    %     z = z + double(warpedFrame); % RS - 160704
     end
-    q = sbxread(fname,j*numFramesToSkip,1);
-    q = squeeze(q(channel,:,:));
-    if ~isempty(info.aligned)
-        q = circshift(q,info.aligned.T(j*numFramesToSkip,:)); 
-%         z = circshift(q,info.aligned.T(i+1,:)); % align the image
-    end
-    z(:,:,j) = q;
 end
