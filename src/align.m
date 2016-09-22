@@ -1,5 +1,5 @@
 
-function [m,T] = align(fname,idx,channel,numIdx,h)
+function [m,T] = align(fname,idx,channel,numIdx,h,doCoarse)
 
 % Aligns images in fname for all indices in idx
 % Accepts:
@@ -12,14 +12,22 @@ function [m,T] = align(fname,idx,channel,numIdx,h)
 %   m - mean image after the alignment
 %   T - optimal translation for each frame
 
-if(length(idx)==1)
+if doCoarse && length(idx) < 7
+    
+    lessThanSevenFrames = sbxread(fname,idx(1),length(idx));
+    lessThanSevenFrames = squeeze(lessThanSevenFrames(channel,:,:,:));
+    meanOfFrames = sum(lessThanSevenFrames,3)/length(idx);
+    m = meanOfFrames;
+    T = zeros(length(idx),2);
+    
+elseif ~doCoarse && length(idx)==1
     
     A = sbxread(fname,idx(1),1);
     A = squeeze(A(channel,:,:));
     m = A;
     T = [0 0];
     
-elseif (length(idx)==2)
+elseif ~doCoarse && length(idx)==2
     
     A = sbxread(fname,idx(1),1);
     B = sbxread(fname,idx(2),1);

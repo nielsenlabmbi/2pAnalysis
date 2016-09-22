@@ -54,7 +54,7 @@ function processGui3_OpeningFcn(hObject,~,handles, varargin)
 handles.output = hObject;
 
 % Set path to current directory and make a blank file name
-handles.filePath = pwd;
+handles.filePath = 'Z:\2P\Ferret 2P\Ferret 2P data';
 handles.fileName = '';
 if ~strcmp('\',handles.filePath(end));
     handles.filePath = [handles.filePath '\'];
@@ -138,7 +138,9 @@ guidata(hObject,handles);
 function FindDataFile_Callback(hObject,~,handles)
 % hObject    handle to FindDataFile (see GCBO)
 % handles    structure with handles and user data (see GUIDATA)
-[fileName,filePath] = uigetfile('*.sbx','Choose a data file.');
+[fileName,filePath] = uigetfile('*.sbx','Choose a data file.','Z:\2P\Ferret 2P\Ferret 2P data');
+% fileName = uigetfile('Z:\2P\Ferret 2P\Ferret 2P data\*.sbx');
+% filePath = 'Z:\2P\Ferret 2P\Ferret 2P data';
 % if user didn't cancel selection
 if fileName ~= 0
     fileName = fileName(1:strfind(fileName,'.sbx')-1);
@@ -462,7 +464,7 @@ if ~isempty(handles.alignFile)
     fn = strcat(handles.filePath,handles.fileName);
     global info;
     h = waitbar(0,'Aligning frames...');
-    [m,T] = align(fn,0:info.max_idx,channel,info.max_idx,h); 
+    [m,T] = align(fn,0:info.max_idx,channel,info.max_idx,h,1); 
     delete(h);
     
     info.aligned.m = m;

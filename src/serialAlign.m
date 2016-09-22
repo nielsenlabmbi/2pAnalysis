@@ -5,7 +5,7 @@
 % fileList{5} = {'F:\ftaf8\ftaf8_001_006' 'F:\ftaf8\ftaf8_001_007' 'F:\ftaf8\ftaf8_001_008' 'F:\ftaf8\ftaf8_001_009'};
 % fileList{6} = {'F:\ftaf8\ftaf8_001_014' 'F:\ftaf8\ftaf8_001_015'};
 
-function serialAlign(fileList,doGroupAlign)
+function serialAlign(fileList,doGroupAlign,doCoarse)
 % accepts cell list of file paths. if files are in groups, then keep them in the same cell. i.e.
 % fileList{1} = 'f:/tpData/ftaf1/ftaf1_001_001';
 % fileList{2} = {'f:/tpData/ftaf1/ftaf1_002_001' 'f:/tpData/ftaf1/ftaf1_002_002';}
@@ -20,7 +20,7 @@ global info;
             disp(['Aligning file ' fname]);
             sbxread(fname,0,1);
             
-			[m,T] = align(fname,0:info.max_idx,channel);
+			[m,T] = align(fname,0:info.max_idx,channel,doCoarse);
 			tGroup{jj} = T;
             mGroup{jj} = m;
         end
@@ -54,7 +54,7 @@ global info;
 	end
 end
 
-function [m,T] = align(fname,idx,channel)
+function [m,T] = align(fname,idx,channel,doCoarse)
 	% Aligns images in fname for all indices in idx
 	% Accepts:
 	%   fname   - filename
@@ -66,14 +66,22 @@ function [m,T] = align(fname,idx,channel)
 	%   m - mean image after the alignment
 	%   T - optimal translation for each frame
   
-	if(length(idx)==1)
+    if doCoarse && length(idx) < 7
+    
+        lessThanSevenFrames = sbxread(fname,idx(1),length(idx));
+        lessThanSevenFrames = squeeze(lessThanSevenFrames(channel,:,:,:));
+        meanOfFrames = sum(lessThanSevenFrames,3)/length(idx);
+        m = meanOfFrames;
+        T = zeros(length(idx),2);
+    
+    elseif ~doCoarse && length(idx)==1
 		
 		A = sbxread(fname,idx(1),1);
 		A = squeeze(A(channel,:,:));
 		m = A;
 		T = [0 0];
 		
-	elseif (length(idx)==2)
+	elseif ~doCoarse && length(idx)==2
 		
 		A = sbxread(fname,idx(1),1);
 		B = sbxread(fname,idx(2),1);
