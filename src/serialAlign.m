@@ -99,8 +99,8 @@ function [m,T] = align(fname,idx,channel,doCoarse)
 		idx0 = idx(1:floor(end/2));
 		idx1 = idx(floor(end/2)+1 : end);
 		
-		[A,T0] = align(fname,idx0,channel);
-		[B,T1] = align(fname,idx1,channel);
+		[A,T0] = align(fname,idx0,channel,doCoarse);
+		[B,T1] = align(fname,idx1,channel,doCoarse);
 	   
 		[u,v] = fftalign(A,B);
 		 

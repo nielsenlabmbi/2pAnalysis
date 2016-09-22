@@ -45,14 +45,14 @@ else
     idx0 = idx(1:floor(end/2));
     idx1 = idx(floor(end/2)+1 : end);
     
-    if nargin == 5 && ~isempty(h)
+    if nargin > 4  && ~isempty(h)
         waitbar(min(idx0)/numIdx,h);
     else
         numIdx = 0; h = [];
     end
     
-    [A,T0] = align(fname,idx0,channel,numIdx,h);
-    [B,T1] = align(fname,idx1,channel,numIdx,h);
+    [A,T0] = align(fname,idx0,channel,numIdx,h,doCoarse);
+    [B,T1] = align(fname,idx1,channel,numIdx,h,doCoarse);
    
     [u,v] = fftalign(A,B);
      
