@@ -22,7 +22,7 @@ function varargout = processGui3(varargin)
 
 % Edit the above text to modify the response to help processGui3
 
-% Last Modified by GUIDE v2.5 19-Jan-2015 19:00:58
+% Last Modified by GUIDE v2.5 09-Mar-2017 16:13:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -791,3 +791,22 @@ set([handles.AlignChannel2 handles.ImageChannel2 handles.SignalsChannel2],'Enabl
 % set(handles.numFramesToSkip,'String','200');
 
 set(handles.PlotPanel,'Visible','off');
+
+
+% --- Executes on button press in GuiAddendum3.
+function GuiAddendum3_Callback(hObject, eventdata, handles)
+% hObject    handle to GuiAddendum3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Throw path information into a settings structure to be used by the data
+% viewing gui
+G.filePath = handles.filePath;
+G.infoFile = [handles.fileName '.mat'];
+G.imageFile = handles.imageFile;
+G.maskFile = handles.maskFile;
+G.signalsFile = handles.signalsFile;
+G.logFile = strcat(handles.fileName, '.log');
+G.fileName = handles.fileName;
+
+GuiAddendum3(G);
