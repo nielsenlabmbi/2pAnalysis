@@ -431,7 +431,7 @@ end
 
 % Plot the tuning curve
 axes(handles.Tuning); cla; hold on; box on;
-plot([.5 length(handles.x)+.5],[0 0],':','Color',[.5 .5 .5]);
+plot([.5 length(handles.x)+.5],[0 0],':','Color','g','linewidth',2);
 if get(handles.WorstResponse,'Value'); e = find(y == min(y)); plot([e e],[-10 10],'--r'); end
 if get(handles.BestResponse,'Value'); e = find(y == max(y)); plot([e e],[-10 10],'--b'); end
 plot(1:length(handles.x),y,'k','LineWidth',2);
@@ -439,15 +439,15 @@ if get(handles.Circ,'Value')
     plot(0:length(handles.x)+1,[y(end);y;y(1)],'k','LineWidth',2);
 end
 e = handles.unitCond(unitNumber);
-plot([e e],[-10 10],'--k');
+plot([e e],[-10 10],'--k','linewidth',2);
 set(gca,'XLim',[.5 length(handles.x)+.5],'YLim',[yMin yMax]);
 set(gca,'XTick',1:length(handles.x),'XTickLabel',handles.x);
 
 % Plot time course of selected parameter conditions
 axes(handles.Timing); cla; hold on; box on;
-plot([S.epochs.range0 S.epochs.range1],[0 0],':','Color',[.5 .5 .5]);
-plot([S.epochs.sig0 S.epochs.sig0],[-10 10],'Color',[.5 .5 .5]);
-plot([S.epochs.sig1 S.epochs.sig1],[-10 10],'Color',[.5 .5 .5]);
+plot([S.epochs.range0 S.epochs.range1],[0 0],':','Color','b','LineWidth',2);
+plot([S.epochs.sig0 S.epochs.sig0],[-10 10],'Color','m','LineWidth',2);
+plot([S.epochs.sig1 S.epochs.sig1],[-10 10],'Color','m','LineWidth',2);
 if get(handles.WorstResponse,'Value')
     e = xInd{y == min(y)};
     if get(handles.FilterResponse,'Value')
