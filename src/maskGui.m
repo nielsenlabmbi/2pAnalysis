@@ -22,7 +22,7 @@ function varargout = maskGui(varargin)
 
 % Edit the above text to modify the response to help maskGui
 
-% Last Modified by GUIDE v2.5 19-Jan-2015 19:03:31
+% Last Modified by GUIDE v2.5 06-Apr-2017 00:32:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -456,3 +456,56 @@ else
     set(gca,'XLim',handles.xlim,'YLim',handles.ylim);
 end
 guidata(hObject,handles);
+
+
+% --- Executes on button press in pushbutton_shiftUp.
+function pushbutton_shiftUp_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_shiftUp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.mask = circshift(handles.mask,-1);
+
+% Now we need update the image and unit number text
+handles.unitNumber = UpdateUnitNumber(handles);
+
+% Update the handles
+guidata(hObject, handles);
+
+% --- Executes on button press in pushbutton_shiftDown.
+function pushbutton_shiftDown_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_shiftDown (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.mask = circshift(handles.mask,1);
+
+% Now we need update the image and unit number text
+handles.unitNumber = UpdateUnitNumber(handles);
+
+% Update the handles
+guidata(hObject, handles);
+
+% --- Executes on button press in pushbutton_shiftRight.
+function pushbutton_shiftRight_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_shiftRight (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.mask = circshift(handles.mask,[0 1]);
+
+% Now we need update the image and unit number text
+handles.unitNumber = UpdateUnitNumber(handles);
+
+% Update the handles
+guidata(hObject, handles);
+
+% --- Executes on button press in pushbuttonLeft.
+function pushbuttonLeft_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonLeft (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.mask = circshift(handles.mask,[0 -1]);
+
+% Now we need update the image and unit number text
+handles.unitNumber = UpdateUnitNumber(handles);
+
+% Update the handles
+guidata(hObject, handles);
