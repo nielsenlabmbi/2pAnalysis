@@ -20,8 +20,8 @@ function serialImage(fileList)
             tempImage = sbxread(fname,0,1);
 			
             if size(tempImage,1) == 2
-                zGreen = readskip(fname,numFramesToSkip,1);
-                zRed = readskip(fname,numFramesToSkip,2);
+                zGreen = readskip(fname,numFramesToSkip,1,1);
+                zRed = readskip(fname,numFramesToSkip,2,1);
 %                 zFull = cat(3,zRed,zGreen,zeros(size(z)));
                 
                 channel = 1;
@@ -45,7 +45,7 @@ function serialImage(fileList)
                 imwrite(avgImage,[fileList{ii}{jj} '.mergeImage.png'])
                 imwrite(avgImage,[fileList{ii}{jj} '.groupImage.tiff'],'WriteMode','append')
             else
-                zGreen = readskip(fname,numFramesToSkip,1);
+                zGreen = readskip(fname,numFramesToSkip,1,1);
                 
                 channel = 1;
                 avgImage = zGreen;
