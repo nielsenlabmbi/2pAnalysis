@@ -22,7 +22,7 @@ function varargout = processGui3(varargin)
 
 % Edit the above text to modify the response to help processGui3
 
-% Last Modified by GUIDE v2.5 19-Jan-2015 19:00:58
+% Last Modified by GUIDE v2.5 06-Apr-2017 01:23:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -464,7 +464,7 @@ if ~isempty(handles.alignFile)
     fn = strcat(handles.filePath,handles.fileName);
     global info;
     h = waitbar(0,'Aligning frames...');
-    [m,T] = align(fn,0:info.max_idx,channel,info.max_idx,h,1); 
+    [m,T] = align(fn,0:info.max_idx,channel,info.max_idx,h,0); 
     delete(h);
     
     info.aligned.m = m;
@@ -522,16 +522,30 @@ guidata(hObject,handles);
 function ImageChannel1_Callback(hObject,~,handles)
 if get(hObject,'Value')
     set(handles.ImageChannel2,'Value',0);
+    set(handles.ImageComposite,'Value',0);
 else
     set(handles.ImageChannel2,'Value',1);
+    set(handles.ImageComposite,'Value',0);
 end
 
 % --- Executes on button press in ImageChannel2.
 function ImageChannel2_Callback(hObject,~,handles)
 if get(hObject,'Value')
     set(handles.ImageChannel1,'Value',0);
+    set(handles.ImageComposite,'Value',0);
 else
     set(handles.ImageChannel1,'Value',1);
+    set(handles.ImageComposite,'Value',0);
+end
+
+% --- Executes on button press in ImageComposite.
+function ImageComposite_Callback(hObject, eventdata, handles)
+if get(hObject,'Value')
+    set(handles.ImageChannel1,'Value',0);
+    set(handles.ImageChannel2,'Value',0);
+else
+    set(handles.ImageChannel1,'Value',1);
+    set(handles.ImageChannel2,'Value',0);
 end
 
 function numFramesToSkip_CreateFcn(~,~,~)
@@ -553,35 +567,47 @@ if ~isempty(handles.imageFile)
         a = questdlg('Overwrite file?','Overwrite Check','Yes','No','Yes');
         if ~strcmp(a,'Yes'); return; end
     end
+    
     % Otherwise start creating image for unit selection
     % Determine which channel to use when creating the image
     if get(handles.ImageChannel1,'Value')
-        channel = 1;
+        channels = 1;
+    elseif get(handles.ImageChannel2,'Value')
+        channels = 2;
     else
-        channel = 2;
+        channels = [1 2];
     end
+    
     % Find the sample spacing
     numFramesToSkip = handles.numFramesToSkip;
-%     % If frames have been aligned, use alignment when making image
-%     if get(handles.AlignCheck,'Value')
-%         afn = strcat(handles.filePath,handles.alignFile);
-%     else
-%         afn = [];
-%     end
+
     % Create an image, subsampling frames
     fn = strcat(handles.filePath,handles.fileName); 
     
-    h = waitbar(0,'Reading frames...');
-    z = readskip(fn,1,numFramesToSkip,channel,h);
-    delete(h);
-    z = double(z);
+    for ch=1:length(channels)
+        channel = channels(ch);
+        h = waitbar(0,['Reading frames for channel ' num2str(channel)]);
+        z = readskip(fn,1,numFramesToSkip,channel,h);
+        delete(h);
+        z = double(z);
+
+        % The image will show variance in each pixel, normalized between 0 and 1
+        avgImage(ch,:,:) = mean(z,3);
+        avgImage(ch,:,:) = avgImage(ch,:,:) - min(min(avgImage(ch,:,:))); 
+        avgImage(ch,:,:) = avgImage(ch,:,:)/max(max(avgImage(ch,:,:))); 
+    end
     
-    % The image will show variance in each pixel, normalized between 0 and 1
-    avgImage = mean(z,3); 
-%     avgImage = std(z,[],3); 
-    avgImage = avgImage - min(avgImage(:)); 
-    avgImage = avgImage/max(avgImage(:)); 
-    avgImage = repmat(avgImage,[1 1 3]);
+    if length(channels) > 1;
+        g = squeeze(avgImage(1,:,:));
+        r = squeeze(avgImage(2,:,:));
+        b = zeros(size(g));
+        avgImage = [];
+        avgImage(:,:,1) = r;
+        avgImage(:,:,2) = g;
+        avgImage(:,:,3) = b;
+    else
+        avgImage = repmat(squeeze(avgImage),[1 1 3]);
+    end
     
     % Save the image
     save(strcat(handles.filePath,handles.imageFile),'avgImage','channel','numFramesToSkip');
