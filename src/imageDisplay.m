@@ -51,18 +51,22 @@ end
 
 function slider_greenLow_Callback(hObject, ~, handles)
     adjustImage(hObject, handles);
+    updateSliders(hObject, handles);
 end
 
 function slider_redLow_Callback(hObject, ~, handles)
     adjustImage(hObject, handles);
+    updateSliders(hObject, handles);
 end
 
 function slider_greenHigh_Callback(hObject, ~, handles)
     adjustImage(hObject, handles);
+    updateSliders(hObject, handles);
 end
 
 function slider_redHigh_Callback(hObject, ~, handles)
     adjustImage(hObject, handles);
+    updateSliders(hObject, handles);
 end
 
 % ==================== HELPER FUNCTIONS ===================================
@@ -104,6 +108,16 @@ function adjustImage(hObject, handles)
     end
     
     imshow(handles.image,'parent',handles.imageAxis);
+    
+    guidata(hObject, handles);
+end
+
+function updateSliders(hObject, handles)
+    set(handles.slider_greenHigh,'Min',get(handles.slider_greenLow,'Value')+0.01);
+    set(handles.slider_redHigh,'Min',get(handles.slider_redLow,'Value')+0.01);
+    
+    set(handles.slider_greenLow,'Max',get(handles.slider_greenHigh,'Value')-0.01);
+    set(handles.slider_redLow,'Max',get(handles.slider_redHigh,'Value')-0.01);
     
     guidata(hObject, handles);
 end
