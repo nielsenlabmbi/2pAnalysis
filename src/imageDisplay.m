@@ -21,8 +21,9 @@ function imageDisplay_OpeningFcn(hObject, ~, handles, varargin)
     handles.output = hObject;
     if ~isempty(varargin)
         loadImage(varargin{2}, hObject, handles)
+    else
+        guidata(hObject, handles);
     end
-    % guidata(hObject, handles);
 end
 
 function varargout = imageDisplay_OutputFcn(hObject, ~, handles) %#ok<INUSL>
