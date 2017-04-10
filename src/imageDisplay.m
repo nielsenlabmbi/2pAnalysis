@@ -68,9 +68,18 @@ end
 
 function loadImage(filePath, hObject, handles)
     load(filePath,'-mat');
-    handles.image = avgImage;
+    handles.image = avgImage; %#ok<NODEF>
     handles.originalImage = avgImage;
     handles.filename = filePath;
+    if isequal(avgImage(:,:,1),avgImage(:,:,2))
+        handles.noRed = true;
+        set(handles.slider_redLow,'Enable','off');
+        set(handles.slider_redHigh,'Enable','off');
+    else
+        handles.noRed = false;
+        set(handles.slider_redLow,'Enable','on');
+        set(handles.slider_redHigh,'Enable','on');
+    end
     imshow(handles.image,'parent',handles.imageAxis)
     set(handles.text_statusbar,'String',['Image loaded from ' filePath]);
     guidata(hObject, handles);
@@ -83,8 +92,15 @@ function adjustImage(hObject, handles)
     rl = get(handles.slider_redLow,'Value');
     rh = get(handles.slider_redHigh,'Value');
     
-    handles.image(:,:,1) = imadjust(handles.originalImage(:,:,1),[rl rh],[0 1]);
-    handles.image(:,:,2) = imadjust(handles.originalImage(:,:,2),[gl gh],[0 1]);
+    if handles.noRed
+        handles.image(:,:,2) = imadjust(handles.originalImage(:,:,2),[gl gh],[0 1]);
+        handles.image(:,:,1) = handles.image(:,:,2);
+        handles.image(:,:,3) = handles.image(:,:,2);
+    else
+        handles.image(:,:,1) = imadjust(handles.originalImage(:,:,1),[rl rh],[0 1]);
+        handles.image(:,:,2) = imadjust(handles.originalImage(:,:,2),[gl gh],[0 1]);
+        handles.image(:,:,3) = zeros(size(handles.image,1),size(handles.image,2));
+    end
     
     imshow(handles.image,'parent',handles.imageAxis);
     
