@@ -229,6 +229,7 @@ if exist(strcat(fn,'.sbx'),'file');
         set(handles.PreviewText2,'String','No Data from Channel 2');
         set(handles.AlignChannel2,'Enable','off');
         set(handles.ImageChannel2,'Enable','off');
+        set(handles.ImageComposite,'Enable','off');
         set(handles.SignalsChannel2,'Enable','off');
         set(handles.SliderChannel2,'Enable','off');
     end
