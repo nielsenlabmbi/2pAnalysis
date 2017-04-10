@@ -40,9 +40,9 @@ function button_load_Callback(hObject, ~, handles)
 end
 
 function button_save_Callback(hObject, ~, handles)
-    avgImage = adjustImage(hObject, handles); %#ok<NASGU>
+    [avgImage,lims] = adjustImage(hObject, handles); %#ok<ASGLU>
     origImage = handles.originalImage; %#ok<NASGU>
-    save(handles.filename,'avgImage','origImage','-append');
+    save(handles.filename,'avgImage','origImage','lims','-append');
     set(handles.text_statusbar,'String',['Image saved to ' handles.filename]);
     guidata(hObject, handles);
 end
@@ -89,7 +89,17 @@ end
 function loadImage(filePath, hObject, handles)
     load(filePath,'-mat');
     handles.image = avgImage; %#ok<NODEF>
-    handles.originalImage = avgImage;
+    if exist('origImage','var')
+        handles.originalImage = origImage;
+    else
+        handles.originalImage = avgImage;
+    end
+    if exist('lims','var')
+        set(handles.slider_greenLow,'Value',lims(1));
+        set(handles.slider_greenHigh,'Value',lims(2));
+        set(handles.slider_redLow,'Value',lims(3));
+        set(handles.slider_redHigh,'Value',lims(4));    
+    end
     handles.filename = filePath;
     handles.showOrig = false;
     if isequal(avgImage(:,:,1),avgImage(:,:,2))
@@ -106,7 +116,7 @@ function loadImage(filePath, hObject, handles)
     guidata(hObject, handles);
 end
 
-function im = adjustImage(hObject, handles)
+function [im,lims] = adjustImage(hObject, handles)
     gl = get(handles.slider_greenLow,'Value');
     gh = get(handles.slider_greenHigh,'Value');
     rl = get(handles.slider_redLow,'Value');
@@ -124,6 +134,7 @@ function im = adjustImage(hObject, handles)
         im(:,:,3) = zeros(size(im,1),size(im,2));
     end
     
+    lims = [gl gh rl rh];
     guidata(hObject, handles);
 end
 
