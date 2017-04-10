@@ -617,7 +617,7 @@ if ~isempty(handles.imageFile)
     set(handles.CreateMask,'Enable','on');
     % Show the image in a new figure window
     % figure; image(avgImage); truesize; set(gca,'XTick',[],'YTick',[]);
-    imageDisplay(strcat(handles.filePath,handles.imageFile));
+    imageDisplay([],strcat(handles.filePath,handles.imageFile));
 else
     warndlg('You must specify a file to hold the image!','No File Warning');
 end

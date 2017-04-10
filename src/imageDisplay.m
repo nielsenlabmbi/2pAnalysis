@@ -20,7 +20,7 @@ end
 function imageDisplay_OpeningFcn(hObject, ~, handles, varargin)
     handles.output = hObject;
     if ~isempty(varargin)
-        loadImage(varargin{1}, hObject, handles)
+        loadImage(varargin{2}, hObject, handles)
     end
     % guidata(hObject, handles);
 end
