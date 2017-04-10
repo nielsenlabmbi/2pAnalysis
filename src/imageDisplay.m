@@ -40,32 +40,47 @@ function button_load_Callback(hObject, ~, handles)
 end
 
 function button_save_Callback(hObject, ~, handles)
-    avgImage = handles.image; %#ok<NASGU>
+    avgImage = adjustImage(hObject, handles); %#ok<NASGU>
     origImage = handles.originalImage; %#ok<NASGU>
     save(handles.filename,'avgImage','origImage','-append');
     set(handles.text_statusbar,'String',['Image saved to ' handles.filename]);
     guidata(hObject, handles);
 end
 
+function button_compare_Callback(hObject, ~, handles)
+    handles.showOrig = ~handles.showOrig;
+    if handles.showOrig
+        imshow(handles.originalImage,'parent',handles.imageAxis)
+    else
+        im = adjustImage(hObject,handles);
+        imshow(im,'parent',handles.imageAxis);
+    end
+    guidata(hObject, handles);
+end
+
 % ==================== SLIDERS ============================================
 
 function slider_greenLow_Callback(hObject, ~, handles)
-    adjustImage(hObject, handles);
+    im = adjustImage(hObject, handles);
+    imshow(im,'parent',handles.imageAxis);
     updateSliders(hObject, handles);
 end
 
 function slider_redLow_Callback(hObject, ~, handles)
-    adjustImage(hObject, handles);
+    im = adjustImage(hObject, handles);
+    imshow(im,'parent',handles.imageAxis);
     updateSliders(hObject, handles);
 end
 
 function slider_greenHigh_Callback(hObject, ~, handles)
-    adjustImage(hObject, handles);
+    im = adjustImage(hObject, handles);
+    imshow(im,'parent',handles.imageAxis);
     updateSliders(hObject, handles);
 end
 
 function slider_redHigh_Callback(hObject, ~, handles)
-    adjustImage(hObject, handles);
+    im = adjustImage(hObject, handles);
+    imshow(im,'parent',handles.imageAxis);
     updateSliders(hObject, handles);
 end
 
@@ -76,6 +91,7 @@ function loadImage(filePath, hObject, handles)
     handles.image = avgImage; %#ok<NODEF>
     handles.originalImage = avgImage;
     handles.filename = filePath;
+    handles.showOrig = false;
     if isequal(avgImage(:,:,1),avgImage(:,:,2))
         handles.noRed = true;
         set(handles.slider_redLow,'Enable','off');
@@ -90,24 +106,23 @@ function loadImage(filePath, hObject, handles)
     guidata(hObject, handles);
 end
 
-
-function adjustImage(hObject, handles)
+function im = adjustImage(hObject, handles)
     gl = get(handles.slider_greenLow,'Value');
     gh = get(handles.slider_greenHigh,'Value');
     rl = get(handles.slider_redLow,'Value');
     rh = get(handles.slider_redHigh,'Value');
     
-    if handles.noRed
-        handles.image(:,:,2) = imadjust(handles.originalImage(:,:,2),[gl gh],[0 1]);
-        handles.image(:,:,1) = handles.image(:,:,2);
-        handles.image(:,:,3) = handles.image(:,:,2);
-    else
-        handles.image(:,:,1) = imadjust(handles.originalImage(:,:,1),[rl rh],[0 1]);
-        handles.image(:,:,2) = imadjust(handles.originalImage(:,:,2),[gl gh],[0 1]);
-        handles.image(:,:,3) = zeros(size(handles.image,1),size(handles.image,2));
-    end
+    im = handles.image;
     
-    imshow(handles.image,'parent',handles.imageAxis);
+    if handles.noRed
+        im(:,:,2) = imadjust(handles.originalImage(:,:,2),[gl gh],[0 1]);
+        im(:,:,1) = im(:,:,2);
+        im(:,:,3) = im(:,:,2);
+    else
+        im(:,:,1) = imadjust(handles.originalImage(:,:,1),[rl rh],[0 1]);
+        im(:,:,2) = imadjust(handles.originalImage(:,:,2),[gl gh],[0 1]);
+        im(:,:,3) = zeros(size(im,1),size(im,2));
+    end
     
     guidata(hObject, handles);
 end
