@@ -611,7 +611,16 @@ if ~isempty(handles.imageFile)
     end
     
     % Save the image
+    avgImage_backup = avgImage;
     save(strcat(handles.filePath,handles.imageFile),'avgImage','channel','numFramesToSkip');
+    
+    avgImage = avgImage_backup(:,:,2);
+    avgImage = repmat(avgImage,1,1,3);
+    save(strcat(handles.filePath,handles.imageFile,'_green'),'avgImage','channel','numFramesToSkip');
+    
+    avgImage = avgImage_backup(:,:,1);
+    avgImage = repmat(avgImage,1,1,3);
+    save(strcat(handles.filePath,handles.imageFile,'_red'),'avgImage','channel','numFramesToSkip');
     
     % Mark that image has been created
     set(handles.ImageCheck,'Value',1);

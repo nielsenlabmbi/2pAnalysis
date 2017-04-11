@@ -40,9 +40,20 @@ function button_load_Callback(hObject, ~, handles)
 end
 
 function button_save_Callback(hObject, ~, handles)
-    [avgImage,lims] = adjustImage(hObject, handles); %#ok<ASGLU>
+    [image,lims] = adjustImage(hObject, handles); %#ok<ASGLU>
     origImage = handles.originalImage; %#ok<NASGU>
+    
+    avgImage = image; %#ok<NASGU>
     save(handles.filename,'avgImage','origImage','lims','-append');
+    
+    avgImage = image(:,:,2);
+    avgImage = repmat(avgImage,1,1,3); %#ok<NASGU>
+    save([handles.filename '_green'],'avgImage','-append');
+    
+    avgImage = image(:,:,1);
+    avgImage = repmat(avgImage,1,1,3); %#ok<NASGU>
+    save([handles.filename '_red'],'avgImage','-append');
+    
     set(handles.text_statusbar,'String',['Image saved to ' handles.filename]);
     guidata(hObject, handles);
 end
