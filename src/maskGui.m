@@ -90,8 +90,9 @@ if exist(fullfile(handles.maskPath,handles.maskFile),'file')==2
         [i,j] = find(handles.mask > 0);
         for k = 1:length(i); im(i(k),j(k),3) = 1; end;
     end
-    axes(handles.Image); image(im);
+    axes(handles.Image); h = image(im);
     set(handles.Image,'XTick',[],'YTick',[]);
+    set(h,'ButtonDownFcn',@(hObject,eventdata)maskGui('axes_ButtonDownFcn',hObject,eventdata,guidata(hObject)));
     % Assign Mask Flags
     if ~exist('maskFlags','var'); handles.maskFlags = ones(max(mask(:)),1);
     else handles.maskFlags = maskFlags; end;
@@ -311,6 +312,7 @@ guidata(hObject, handles);
 % --- Executes on button press in ChangeROI.
 function ChangeROI_Callback(hObject,~,handles)
 % Only do this if on a valid unit
+handles.unitNumber = str2double(get(handles.UnitNumber,'String'));
 if handles.unitNumber > 0
     % Get the current unit
     mask = handles.mask == handles.unitNumber;
@@ -347,7 +349,7 @@ function DeleteROI_Callback(hObject,~,handles)
 % hObject    handle to DeleteROI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles.unitNumber = str2double(get(handles.UnitNumber,'String'));
 % remove the mask flag
 if handles.unitNumber == 1
     handles.maskFlags = handles.maskFlags(handles.unitNumber+1:end);
@@ -414,8 +416,9 @@ if unitNumber > 0
     for k = 1:length(i); im(i(k),j(k),1) = 1; end;
 end
 % Show ROIs
-image(im); set(handles.Image,'XTick',[],'YTick',[]);
+h = image(im); set(handles.Image,'XTick',[],'YTick',[]);
 set(handles.Image,'XLim',handles.xlim,'YLim',handles.ylim);
+set(h,'ButtonDownFcn',@(hObject,eventdata)maskGui('axes_ButtonDownFcn',hObject,eventdata,guidata(hObject)));
 
 % Update the unit number text
 set(handles.UnitNumber,'String',num2str(unitNumber));
@@ -509,3 +512,20 @@ handles.unitNumber = UpdateUnitNumber(handles);
 
 % Update the handles
 guidata(hObject, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes_ButtonDownFcn(hObject, eventdata, handles)
+xy = get(handles.Image,'CurrentPoint');
+x = round(xy(1,1)); y = round(xy(1,2));
+
+if x < 1; x = 1; end; if x > size(handles.mask,2); x = size(handles.mask,2); end;
+if y < 1; y = 1; end; if y > size(handles.mask,1); y = size(handles.mask,1); end;
+
+unit = handles.mask(y,x);
+
+if unit > 0
+    handles.unitNumber = unit;
+    set(handles.UnitNumber,'String',num2str(unit));
+    UpdateUnitNumber(handles);
+end
