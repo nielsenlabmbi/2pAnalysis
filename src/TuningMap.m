@@ -179,6 +179,10 @@ guidata(hObject,handles);
 function Param1_CreateFcn(~,~,~)
 function Param1_Callback(hObject,~,handles)
 handles.param1 = get(hObject,'Value');
+% eventdata = [];
+% Param2_Callback(hObject,eventdata,handles);
+handles.param2 = 0; 
+set(handles.Param2Value,'String','best','Value',1);
 handles = UpdateImage(handles);
 guidata(hObject,handles);
 
@@ -264,12 +268,15 @@ UpdateUnitNumber(handles);
 function handles = UpdateImage(handles)
 
 global mean_over_phase max_over_ori sf_vect_mx_mx best_ori...
-    pref_sf  time_delay max_over_sf ...
-    or_vect_mx_mx  best_sf  pref_or sem time_delay_ori...
+    pref_sf best_sf_in_window time_delay_sf max_over_sf ...
+    or_vect_mx_mx  best_sf  pref_or  best_or_in_window time_delay_ori...
     max_over_time best_timecourse worst_timecourse domains
 
-[mean_over_phase, sem, max_over_ori, max_over_sf, sf_vect_mx_mx, or_vect_mx_mx, best_ori, best_sf, ...
-    time_delay]  = pref_general0(Z_session, Stimuli, Info, [0 1000], 'best', 'slice');
+[mean_over_phase, max_over_ori, sf_vect_mx_mx, best_ori, pref_sf, best_sf_in_window, time_delay_sf] ...
+     = sf_pref0(handles.Z, handles.S, handles.I);
+ 
+[~, max_over_sf, or_vect_mx_mx, best_sf, pref_or, best_or_in_window, time_delay_ori]...
+    = or_pref0(handles.Z, handles.S, handles.I);
 
 max_over_time = cell(1,handles.I.ncells);
 
@@ -277,13 +284,16 @@ domains.oridom = unique(handles.S.unique_stimuli(:,1));
 domains.sfdom = unique(handles.S.unique_stimuli(:,2));
 
 for n = 1:handles.I.ncells
-    max_over_time{n} = max(mean_over_phase{n},[],3);
+    max_over_time{n} = zeros(length(domains.oridom),length(domains.sfdom));
+    for i = 1:length(mean_over_phase{n}(:))
+        max_over_time{n}(i) = mean_over_phase{n}{i}(time_delay_ori(n));
+    end
 end
-% best & worst timecourses
-best_timecourse = cell(ncells,1);
-for n = 1:ncells
-    [a,b] = max(max_over_sf{n}(:,time_delay_ori(n)));
-    best_timecourse{n} = max_over_sf{n}(b,:);
+% best timecourses
+best_timecourse = cell(handles.I.ncells,1);
+ for n = 1:handles.I.ncells
+    [a,b] = max(max_over_time{n}(:));
+    best_timecourse{n} = mean_over_phase{n}{b};
 end
 worst_timecourse = cell(handles.I.ncells,1);
 for n = 1:handles.I.ncells
@@ -499,18 +509,18 @@ if get(handles.AllTrials,'Value')
         if  handles.param2 && handles.param2value
             IX = S.unique_stimuli(:,1) == domains.oridom(unitCond(unitNumber)) & S.unique_stimuli(:,2) == x2(handles.param2value);
         else
-            IX = S.unique_stimuli(:,1) == domains.oridom(unitCond(unitNumber)) & S.unique_stimuli(:,2) == x2(best_sf(unitCond(unitNumber)));
+            IX = S.unique_stimuli(:,1) == domains.oridom(unitCond(unitNumber));
         end
-            alltrials = Z(unitNumber).mean_stim(IX,:);
+            alltrials = Z(unitNumber).mean_dFstim(IX,:);
         plot(I.approx_kernel_times,alltrials,'Color',[.5 .5 .5],'LineWidth',1)
         
     elseif strcmp(S.params{handles.param1},'spatial frequency');
         if  handles.param2 && handles.param2value
             IX = S.unique_stimuli(:,2) == domains.sfdom(unitCond(unitNumber)) & S.unique_stimuli(:,1) == x2(handles.param2value);
         else
-            IX = S.unique_stimuli(:,2) == domains.sfdom(unitCond(unitNumber)) & S.unique_stimuli(:,1) == x2(best_ori(unitCond(unitNumber)));
+            IX = S.unique_stimuli(:,2) == domains.sfdom(unitCond(unitNumber));
         end
-            alltrials = Z(unitNumber).mean_stim(IX,:);
+            alltrials = Z(unitNumber).mean_dFstim(IX,:);
         plot(I.approx_kernel_times,alltrials,'Color',[.5 .5 .5],'LineWidth',1)
     end
 unitCond = handles.unitCond;
@@ -636,4 +646,98 @@ function kernelPost_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+%%%%%%%%% Support Functions
+function [mean_over_phase, max_over_sf, or_vect_mx_mx, best_sf, pref_or, best_or_in_window,...
+    time_delay_ori] = or_pref0(Z_session, Stimuli, Info)
+
+ncells = Info.ncells;
+domains.oridom = unique(Stimuli.unique_stimuli(:,1));
+domains.sfdom = unique(Stimuli.unique_stimuli(:,2));
+%%
+kernel_length = length(Info.approx_kernel_times);
+kernel_window = find(Info.approx_kernel_times >=0 & Info.approx_kernel_times < 1000);
+%%
+mean_over_phase = cell(1,ncells);
+%average over spatial phase
+for i = 1:length(domains.oridom);
+    for j = 1:length(domains.sfdom);
+        IX = Stimuli.unique_stimuli(:,1) == domains.oridom(i) & Stimuli.unique_stimuli(:,2) == domains.sfdom(j);
+        for n = 1:ncells
+          mean_over_phase{n}{i,j}= mean(Z_session(n).mean_dFstim(IX,:),1);
+        end
+    end
+end
+
+% orientation v time
+
+max_over_sf = cell(1,ncells);
+or_vect_mx_mx = zeros(ncells,length(domains.oridom));
+best_or_in_window = zeros(ncells,length(domains.oridom));
+best_sf = cell(1,ncells);
+pref_or = zeros(ncells,1);
+time_delay_ori = zeros(ncells,1);
+
+for n = 1:ncells
+    max_over_sf{n} = zeros(length(domains.oridom),kernel_length);
+    best_sf{n} = zeros(1,length(domains.oridom));
+    for i = 1:length(domains.oridom)
+        matrix = cell2mat(mean_over_phase{n}(i,:)');
+        [x(i), best_sf{n}(i)] = max(max(matrix(:,kernel_window),[],2)); %when the cell has the highest response in 0-1s 
+    end
+    [~,ix] = max(x);
+    max_over_sf{n} = cell2mat(mean_over_phase{n}(:,best_sf{n}(ix))); %at the given orientation and best sf.
+    
+    [a,b] = max(max(max_over_sf{n}(:,kernel_window),[],1));
+    time_delay_ori(n) = kernel_window(b);
+    or_vect_mx_mx(n,:) = max_over_sf{n}(:,time_delay_ori(n)); %mean(max_over_sf{n}(:,kernel_window),2);%
+    [a,b] = max(or_vect_mx_mx(n,:));
+    pref_or(n) = domains.oridom(b);
+end
+
+function [mean_over_phase, max_over_ori, sf_vect_mx_mx, best_ori, pref_sf, best_sf_in_window, ...
+     time_delay_sf] = sf_pref0(Z_session, Stimuli, Info)
+ 
+ncells = Info.ncells;
+domains.oridom = unique(Stimuli.unique_stimuli(:,1));
+domains.sfdom = unique(Stimuli.unique_stimuli(:,2));
+
+kernel_length = length(Info.approx_kernel_times);
+kernel_window = find(Info.approx_kernel_times >=0 & Info.approx_kernel_times < 1000);
+
+mean_over_phase = cell(1,ncells);
+%average over spatial phase
+for i = 1:length(domains.oridom);
+    for j = 1:length(domains.sfdom);
+        IX = Stimuli.unique_stimuli(:,1) == domains.oridom(i) & Stimuli.unique_stimuli(:,2) == domains.sfdom(j);
+        for n = 1:ncells
+          mean_over_phase{n}{i,j}= mean(Z_session(n).mean_dFstim(IX,:),1);
+        end
+    end
+end
+% spatial frequency v time
+
+max_over_ori = cell(1,ncells);
+sf_vect_mx_mx = zeros(ncells,length(domains.sfdom));
+best_sf_in_window = zeros(ncells,length(domains.sfdom));
+best_ori = cell(1,ncells);
+pref_sf = zeros(ncells,1);
+time_delay_sf = zeros(ncells,1);
+for n = 1:ncells
+    max_over_ori{n} = zeros(length(domains.sfdom),kernel_length);
+    best_ori{n} = zeros(1,length(domains.sfdom));
+    for i = 1:length(domains.sfdom)
+        matrix = cell2mat(mean_over_phase{n}(:,i));
+        [x(i), best_ori{n}(i)] = max(max(matrix(:,kernel_window),[],2)); %when and at what orientation the cell has the highest response in 0-1s 
+    end
+     [~,ix] = max(x);
+     max_over_ori{n} = cell2mat(mean_over_phase{n}(best_ori{n}(ix),:)'); %at the given sf and best orientation.
+    
+    [a,b] = max(max(max_over_ori{n}(:,kernel_window),[],1));
+    time_delay_sf(n) = kernel_window(b);
+    sf_vect_mx_mx(n,:) = max_over_ori{n}(:,time_delay_sf(n));% mean(max_over_ori{n}(:,kernel_window),2);%
+    [a, b] = max(sf_vect_mx_mx(n,:));
+    pref_sf(n) = domains.sfdom(b);
+    
 end
