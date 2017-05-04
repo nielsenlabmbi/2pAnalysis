@@ -22,7 +22,7 @@ function varargout = maskGui(varargin)
 
 % Edit the above text to modify the response to help maskGui
 
-% Last Modified by GUIDE v2.5 19-Jan-2015 19:03:31
+% Last Modified by GUIDE v2.5 12-Apr-2017 11:42:29
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -73,9 +73,18 @@ end
 % Load image if exists
 if exist(fullfile(handles.imagePath,handles.imageFile),'file')==2
     load(fullfile(handles.imagePath,handles.imageFile),'-mat');
+    if isequal(avgImage(:,:,1),avgImage(:,:,2))
+        set(handles.sliderHigh,'Enable','on');
+        set(handles.sliderLow,'Enable','on');
+    else
+        set(handles.sliderHigh,'Enable','off');
+        set(handles.sliderLow,'Enable','off');
+    end
     handles.image = avgImage;
+    handles.origImage = avgImage;
 else % Otherwise load a blank image
     handles.image = repmat(zeros(512,796),1,1,3);
+    handles.origImage = repmat(zeros(512,796),1,1,3);
 end
 
 % Load mask if exists
@@ -90,8 +99,9 @@ if exist(fullfile(handles.maskPath,handles.maskFile),'file')==2
         [i,j] = find(handles.mask > 0);
         for k = 1:length(i); im(i(k),j(k),3) = 1; end;
     end
-    axes(handles.Image); image(im);
+    axes(handles.Image); h = image(im);
     set(handles.Image,'XTick',[],'YTick',[]);
+    set(h,'ButtonDownFcn',@(hObject,eventdata)maskGui('axes_ButtonDownFcn',hObject,eventdata,guidata(hObject)));
     % Assign Mask Flags
     if ~exist('maskFlags','var'); handles.maskFlags = ones(max(mask(:)),1);
     else handles.maskFlags = maskFlags; end;
@@ -160,8 +170,17 @@ function LoadImage_Callback(hObject,~,handles)
 if exist(fullfile(handles.imagePath,handles.imageFile),'file')==2
     % Load image if exists
     load(fullfile(handles.imagePath,handles.imageFile),'-mat');
+    if isequal(avgImage(:,:,1),avgImage(:,:,2))
+        set(handles.sliderHigh,'Enable','on');
+        set(handles.sliderLow,'Enable','on');
+    else
+        set(handles.sliderHigh,'Enable','off');
+        set(handles.sliderLow,'Enable','off');
+    end
     handles.image = avgImage;
+    handles.origImage = avgImage;
     handles.unitNumber = UpdateUnitNumber(handles);
+    
     guidata(hObject, handles);
 elseif isempty(handles.imageFile)
     a = questdlg('Load a blank image?','Blank Image','Yes','No','Yes');
@@ -311,6 +330,7 @@ guidata(hObject, handles);
 % --- Executes on button press in ChangeROI.
 function ChangeROI_Callback(hObject,~,handles)
 % Only do this if on a valid unit
+handles.unitNumber = str2double(get(handles.UnitNumber,'String'));
 if handles.unitNumber > 0
     % Get the current unit
     mask = handles.mask == handles.unitNumber;
@@ -347,7 +367,7 @@ function DeleteROI_Callback(hObject,~,handles)
 % hObject    handle to DeleteROI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles.unitNumber = str2double(get(handles.UnitNumber,'String'));
 % remove the mask flag
 if handles.unitNumber == 1
     handles.maskFlags = handles.maskFlags(handles.unitNumber+1:end);
@@ -370,26 +390,6 @@ end
 handles.unitNumber = UpdateUnitNumber(handles);
 % Update the handles
 guidata(hObject, handles);
-
-% --- Executes on slider movement.
-function UnitSlider_Callback(hObject,~,handles)
-% hObject    handle to UnitSlider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
-% --- Executes during object creation, after setting all properties.
-function UnitSlider_CreateFcn(hObject,~,handles)
-% hObject    handle to UnitSlider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
 
 function unitNumber = UpdateUnitNumber(handles)
 % Get the proposed unit number
@@ -414,8 +414,10 @@ if unitNumber > 0
     for k = 1:length(i); im(i(k),j(k),1) = 1; end;
 end
 % Show ROIs
-image(im); set(handles.Image,'XTick',[],'YTick',[]);
+h = image(im); set(handles.Image,'XTick',[],'YTick',[]);
 set(handles.Image,'XLim',handles.xlim,'YLim',handles.ylim);
+set(h,'ButtonDownFcn',@(hObject,eventdata)maskGui('axes_ButtonDownFcn',hObject,eventdata,guidata(hObject)));
+set(handles.figure1,'KeyPressFcn',@(hObject,eventdata)maskGui('axes_KeyPressFcn',hObject,eventdata,guidata(hObject)));
 
 % Update the unit number text
 set(handles.UnitNumber,'String',num2str(unitNumber));
@@ -424,7 +426,6 @@ if unitNumber > 0
 else
     set(handles.MaskFlag,'String','');
 end
-
 
 function MaskFlag_CreateFcn(~,~,~)
 function MaskFlag_Callback(hObject, eventdata, handles)
@@ -456,3 +457,125 @@ else
     set(gca,'XLim',handles.xlim,'YLim',handles.ylim);
 end
 guidata(hObject,handles);
+
+% --- Executes on button press in pushbutton_shiftUp.
+function pushbutton_shiftUp_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_shiftUp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.mask = circshift(handles.mask,-1);
+
+% Now we need update the image and unit number text
+handles.unitNumber = UpdateUnitNumber(handles);
+
+% Update the handles
+guidata(hObject, handles);
+
+% --- Executes on button press in pushbutton_shiftDown.
+function pushbutton_shiftDown_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_shiftDown (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.mask = circshift(handles.mask,1);
+
+% Now we need update the image and unit number text
+handles.unitNumber = UpdateUnitNumber(handles);
+
+% Update the handles
+guidata(hObject, handles);
+
+% --- Executes on button press in pushbutton_shiftRight.
+function pushbutton_shiftRight_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_shiftRight (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.mask = circshift(handles.mask,[0 1]);
+
+% Now we need update the image and unit number text
+handles.unitNumber = UpdateUnitNumber(handles);
+
+% Update the handles
+guidata(hObject, handles);
+
+% --- Executes on button press in pushbuttonLeft.
+function pushbuttonLeft_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonLeft (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.mask = circshift(handles.mask,[0 -1]);
+
+% Now we need update the image and unit number text
+handles.unitNumber = UpdateUnitNumber(handles);
+
+% Update the handles
+guidata(hObject, handles);
+
+% --- Executes on mouse press over axes background.
+function axes_ButtonDownFcn(hObject, eventdata, handles)
+xy = get(handles.Image,'CurrentPoint');
+x = round(xy(1,1)); y = round(xy(1,2));
+
+if x < 1; x = 1; end; if x > size(handles.mask,2); x = size(handles.mask,2); end;
+if y < 1; y = 1; end; if y > size(handles.mask,1); y = size(handles.mask,1); end;
+
+unit = handles.mask(y,x);
+
+if unit > 0
+    handles.unitNumber = unit;
+    set(handles.UnitNumber,'String',num2str(unit));
+    UpdateUnitNumber(handles);
+end
+
+% --- Executes on key press over axes background.
+function axes_KeyPressFcn(hObject, eventdata, handles)
+if strcmp(eventdata.Key,'a')
+    AddROI_Callback(hObject,[],handles);
+elseif strcmp(eventdata.Key,'z')
+    ZoomButton_Callback(hObject, [], handles);
+elseif strcmp(eventdata.Key,'delete')
+    DeleteROI_Callback(hObject,[],handles);
+end
+
+% --- Executes on slider movement.
+function sliderLow_Callback(hObject, eventdata, handles)
+    handles.image = adjustImage(handles);
+    h = image(handles.image,'parent',handles.Image);
+    set(handles.Image,'XTick',[],'YTick',[]);
+    set(h,'ButtonDownFcn',@(hObject,eventdata)maskGui('axes_ButtonDownFcn',hObject,eventdata,guidata(hObject)));
+    updateSliders(hObject, handles);
+    guidata(hObject, handles);
+    handles.unitNumber = UpdateUnitNumber(handles);
+
+% --- Executes on slider movement.
+function sliderHigh_Callback(hObject, eventdata, handles)
+    handles.image = adjustImage(handles);
+    h = image(handles.image,'parent',handles.Image);
+    set(handles.Image,'XTick',[],'YTick',[]);
+    set(h,'ButtonDownFcn',@(hObject,eventdata)maskGui('axes_ButtonDownFcn',hObject,eventdata,guidata(hObject)));
+    updateSliders(hObject, handles);
+    guidata(hObject, handles);
+    handles.unitNumber = UpdateUnitNumber(handles);
+
+function sliderHigh_CreateFcn(hObject, eventdata, handles)
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+function sliderLow_CreateFcn(hObject, eventdata, handles)
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+function im = adjustImage(handles)
+    gl = get(handles.sliderLow,'Value');
+    gh = get(handles.sliderHigh,'Value');
+    
+    im = handles.image;
+    im(:,:,2) = imadjust(handles.origImage(:,:,1),[gl gh],[0 1]);
+    im(:,:,1) = im(:,:,2);
+    im(:,:,3) = im(:,:,2);
+
+function updateSliders(hObject, handles)
+    set(handles.sliderHigh,'Min',get(handles.sliderLow,'Value')+0.01);
+    set(handles.sliderLow,'Max',get(handles.sliderHigh,'Value')-0.01);
+    guidata(hObject, handles);
