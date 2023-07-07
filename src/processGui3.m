@@ -22,7 +22,7 @@ function varargout = processGui3(varargin)
 
 % Edit the above text to modify the response to help processGui3
 
-% Last Modified by GUIDE v2.5 03-May-2017 14:03:13
+% Last Modified by GUIDE v2.5 07-Jul-2023 15:32:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -257,12 +257,12 @@ if exist(strcat(fn,'.sbx'),'file');
         load(ifn,'-mat');
         if channel == 1; set(handles.ImageChannel1,'Value',1); end;
         if channel == 2; set(handles.ImageChannel2,'Value',1); end;
-        handles.numFramesToSkip = numFramesToSkip;
-%         set(handles.numFramesToSkip,'String',num2str(numFramesToSkip));
+        handles.numFramesToSample = numFramesToSample;
+%         set(handles.numFramesToSample,'String',num2str(numFramesToSample));
         set(handles.CreateMask,'Enable','on');
     else
         set(handles.ImageChannel1,'Value',1);
-        handles.numFramesToSkip = str2double(get(handles.numFramesToSkip,'String'));
+        handles.numFramesToSample = str2double(get(handles.numFramesToSample,'String'));
     end
     % Set the mask file, check for completion and which channel
     handles.maskFile = strcat(handles.fileName,'.segment');
@@ -510,7 +510,7 @@ if exist(fn,'file') && ~isempty(imageFile);
         set(handles.ImageChannel2,'Value',1);
     end
     % and the sample frame spacing
-    set(handles.numFramesToSkip,'String',numFramesToSkip);
+    set(handles.numFramesToSample,'String',numFramesToSkip);
 else
     % otherwise mark as not completed
     set(handles.ImageCheck,'Value',0);
@@ -549,13 +549,13 @@ else
     set(handles.ImageChannel2,'Value',0);
 end
 
-function numFramesToSkip_CreateFcn(~,~,~)
-function numFramesToSkip_Callback(hObject,~,handles)
-numFramesToSkip = str2num(get(hObject,'String')); %#ok<ST2NM>
-if ~isempty(numFramesToSkip)
-    handles.numFramesToSkip = abs(round(numFramesToSkip));
+function numFramesToSample_CreateFcn(~,~,~)
+function numFramesToSample_Callback(hObject,~,handles)
+numFramesToSample = str2num(get(hObject,'String')); %#ok<ST2NM>
+if ~isempty(numFramesToSample)
+    handles.numFramesToSample = abs(round(numFramesToSample));
 end
-set(hObject,'String',num2str(numFramesToSkip));
+set(hObject,'String',num2str(numFramesToSample));
 % update handles
 guidata(hObject,handles);
 
@@ -580,7 +580,7 @@ if ~isempty(handles.imageFile)
     end
     
     % Find the sample spacing
-    numFramesToSkip = handles.numFramesToSkip;
+    numFramesToSample = handles.numFramesToSample;
 
     % Create an image, subsampling frames
     fn = strcat(handles.filePath,handles.fileName); 
@@ -588,12 +588,12 @@ if ~isempty(handles.imageFile)
     for ch=1:length(channels)
         channel = channels(ch);
         h = waitbar(0,['Reading frames for channel ' num2str(channel)]);
-        z = readskip(fn,1,numFramesToSkip,channel,h);
+        z = readskip(fn,numFramesToSample,channel,h);
         delete(h);
-        z = double(z);
+        %z = double(z);
 
-        % The image will show variance in each pixel, normalized between 0 and 1
-        avgImage(ch,:,:) = mean(z,3);
+        % compute image, normalized between 0 and 1
+        avgImage(ch,:,:) = std(z,[],3);
         avgImage(ch,:,:) = avgImage(ch,:,:) - min(min(avgImage(ch,:,:))); 
         avgImage(ch,:,:) = avgImage(ch,:,:)/max(max(avgImage(ch,:,:))); 
     end
@@ -612,15 +612,15 @@ if ~isempty(handles.imageFile)
     
     % Save the image
     avgImage_backup = avgImage;
-    save(strcat(handles.filePath,handles.imageFile),'avgImage','channel','numFramesToSkip');
+    save(strcat(handles.filePath,handles.imageFile),'avgImage','channel','numFramesToSample');
     
     avgImage = avgImage_backup(:,:,2);
     avgImage = repmat(avgImage,1,1,3);
-    save(strcat(handles.filePath,handles.imageFile,'_green'),'avgImage','channel','numFramesToSkip');
+    save(strcat(handles.filePath,handles.imageFile,'_green'),'avgImage','channel','numFramesToSample');
     
     avgImage = avgImage_backup(:,:,1);
     avgImage = repmat(avgImage,1,1,3);
-    save(strcat(handles.filePath,handles.imageFile,'_red'),'avgImage','channel','numFramesToSkip');
+    save(strcat(handles.filePath,handles.imageFile,'_red'),'avgImage','channel','numFramesToSample');
     
     % Mark that image has been created
     set(handles.ImageCheck,'Value',1);
@@ -668,7 +668,7 @@ if ~isempty(handles.maskFile)
     % Open GUI to define units
     maskGui('imagePath',handles.filePath,'imageFile',handles.imageFile,...
         'maskPath',handles.filePath,'maskFile',handles.maskFile);
-    
+   
     % Check that mask file now exists
     mfn = strcat(handles.filePath,handles.maskFile);
     if exist(mfn,'file')
@@ -825,7 +825,7 @@ set([handles.AlignChannel1 handles.AlignChannel2],'Value',0);
 set([handles.ImageChannel1 handles.ImageChannel2],'Value',0);
 set([handles.SignalsChannel1 handles.SignalsChannel2],'Value',0);
 set([handles.AlignChannel2 handles.ImageChannel2 handles.SignalsChannel2],'Enable','on');
-% set(handles.numFramesToSkip,'String','200');
+% set(handles.numFramesToSample,'String','200');
 
 set(handles.PlotPanel,'Visible','off');
 

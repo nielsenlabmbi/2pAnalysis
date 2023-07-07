@@ -22,7 +22,7 @@ function varargout = maskGui(varargin)
 
 % Edit the above text to modify the response to help maskGui
 
-% Last Modified by GUIDE v2.5 12-Apr-2017 11:42:29
+% Last Modified by GUIDE v2.5 07-Jul-2023 15:27:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,6 +52,7 @@ function maskGui_OpeningFcn(hObject,~,handles,varargin)
 
 % Choose default command line output for maskGui
 handles.output = hObject;
+
 
 %%%%% SETTING UP GUI HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check for inputs, assign if given
@@ -118,6 +119,7 @@ handles.unitNumber = UpdateUnitNumber(handles);
 
 % Update handles structure
 guidata(hObject, handles);
+%uiwait();
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % --- Outputs from this function are returned to the command line.
@@ -128,7 +130,7 @@ function varargout = maskGui_OutputFcn(hObject,~,handles)  %#ok<*INUSL>
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
-
+%delete(hObject);
 
 %%%%% IMAGE LOADER FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function ImagePath_CreateFcn(~,~,~) %#ok<*DEFNU>
@@ -579,3 +581,14 @@ function updateSliders(hObject, handles)
     set(handles.sliderHigh,'Min',get(handles.sliderLow,'Value')+0.01);
     set(handles.sliderLow,'Max',get(handles.sliderHigh,'Value')-0.01);
     guidata(hObject, handles);
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+delete(hObject);
+%uiresume()
