@@ -593,9 +593,10 @@ if ~isempty(handles.imageFile)
         %z = double(z);
 
         % compute image, normalized between 0 and 1
-        avgImage(ch,:,:) = std(z,[],3);
-        avgImage(ch,:,:) = avgImage(ch,:,:) - min(min(avgImage(ch,:,:))); 
-        avgImage(ch,:,:) = avgImage(ch,:,:)/max(max(avgImage(ch,:,:))); 
+        zT = uint8(255*double(z)/double(intmax('uint16')));
+        avgImage(ch,:,:) = mean(zT,3);
+        %avgImage(ch,:,:) = avgImage(ch,:,:) - min(min(avgImage(ch,:,:))); 
+        %avgImage(ch,:,:) = avgImage(ch,:,:)/max(max(avgImage(ch,:,:))); 
     end
     
     if length(channels) > 1;
